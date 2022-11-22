@@ -1,0 +1,145 @@
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv('churn_Modelling.csv', index_col='RowNumber')
+df.head()
+
+df.info()
+
+df.isnull().values.any()
+
+df.describe()
+
+x_columns = df.columns.tolist()[2:12]
+y_columns = df.columns.tolist()[-1:]
+
+print(f'All columns: {df.columns.tolist()}')
+
+print(f'X values: {x_columns}')
+print(f'y values: {y_columns}')
+
+
+x = df[x_columns].values
+y = df[y_columns].values
+
+from sklearn.preprocessing import LabelEncoder
+
+print(x[:8,1], '... will now become: ')
+
+label_x_country_encoder = LabelEncoder()
+x[:,1] = label_x_country_encoder.fit_transform(x[:,1])
+print(x[:8,1])
+
+
+print(x[:6,2], '... will now become: ')
+label_x_gender_encoder = LabelEncoder()
+x[:,2] = label_x_gender_encoder.fit_transform(x[:,2])
+print(x[:6,2])
+
+
+
+
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+
+pipeline = Pipeline(
+    [('Categorizer', ColumnTransformer(
+         [ # Gender
+          ("Gender Label encoder", OneHotEncoder(categories='auto', drop='first'), [2]),
+           # Geography
+          ("Geography One Hot", OneHotEncoder(categories='auto', drop='first'), [1])
+         ], remainder='passthrough', n_jobs=1)),
+     # Standard Scaler for the classifier
+    ('Normalizer', StandardScaler())
+    ])
+
+
+
+x = pipeline.fit_transform(x)
+
+
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+
+#####Initilizing ANN###
+classifier = Sequential()
+
+from sklearn.model_selection import train_test_split
+x_train, x_test, y_train, y_test = train_test_split(x,y, test_size = 0.2, random_state = 0)
+
+
+print(f'training shapes: {x_train.shape}, {y_train.shape}')
+print(f'testing shapes: {x_test.shape}, {y_test.shape}')
+
+
+####Adding Input Layer####
+classifier.add(Dense(6, activation = 'relu', input_shape = (x_train.shape[1], )))
+classifier.add(Dropout(rate=0.1))
+
+
+#####adding 2nd Hdden Layer####
+
+classifier.add(Dense(6, activation = 'relu')) 
+classifier.add(Dropout(rate=0.1))
+
+####Output Layer#####
+classifier.add(Dense(1, activation = 'sigmoid'))
+
+
+classifier.summary()
+
+
+
+##Compiling Neural Network####
+
+classifier.compile(optimizer='adam', loss = 'binary_crossentropy', metrics=['accuracy'])
+
+history = classifier.fit(x_train, y_train, batch_size=32, epochs=200, validation_split=0.1, verbose=2)
+
+
+history = classifier.fit(x_train, y_train, batch_size=32, epochs=200, validation_split=0.1, verbose=2)
+
+y_pred = classifier.predict(x_test)
+print(y_pred[:5])
+
+y_pred = (y_pred > 0.5).astype(int)
+print(y_pred[:5])
+
+
+from sklearn.metrics import classification_report, confusion_matrix
+
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix")
+print(cm)
+
+
+cr = classification_report(y_test, y_pred)
+print("Classification Report")
+print(cr)
+
+
+tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+
+accuracy  =(tp+tn)/(tp+tn+fp+fn)
+precision =(tp)/(tp+fp)
+recall  =(tp)/(tp+fn)
+f1_score =2*(( precision * recall)/( precision + recall))
+
+
+print( 
+    'Accuracy:\t',accuracy*100,
+    '\nPrecision:\t',precision*100,
+    '\nRecall: \t',recall*100,
+    '\nF1-Score:\t',f1_score*100)
+
+
+
+
+
+
+
+
+
+
