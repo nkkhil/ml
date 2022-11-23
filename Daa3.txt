@@ -1,0 +1,23 @@
+class Items:
+    def __init__(self,value,weight):
+        self.value=value
+        self.weight=weight
+def knapsack(W, arr):
+    arr.sort(key=lambda x: (x.value/x.weight), reverse=True)
+    for item in arr:
+        print(item.value,item.weight,item.value/item.weight)
+    finalvalue=0.0
+    for item in arr:
+        if item.weight <= W:
+            W-=item.weight
+            finalvalue+=item.weight
+        else:
+            finalvalue=item.value*W/item.weight
+            break
+    return finalvalue
+if __name__ == "__main__":
+    W=46
+    arr=[Items(79,13),Items(107,23),Items(173,12),Items(83,7)]
+    max_value=knapsack(W,arr)
+    print("weight of bag::",W)
+    print('Maximum profit={}',max_value)

@@ -1,0 +1,12 @@
+def knapsack(W,wr,val,n):
+    if n==0 or W==0:
+        return 0
+    if (wr[n-1]>W):
+        return knapsack(W,wr,val,n-1)
+    else:
+        return max(val[n-1]+knapsack(W-wr[n-1],wr,val,n-1),knapsack(W,wr,val,n-1))
+val=[60,90,120,150,180,210]
+wr=[3,5,15,30,60,90]
+W=60
+n=len(val)
+print(knapsack(W,wr,val,n))
